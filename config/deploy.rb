@@ -1,22 +1,26 @@
-set :application, "set your application name here"
-set :repository,  "set your repository location here"
-
-set :scm, :subversion
-# Or: `accurev`, `bzr`, `cvs`, `darcs`, `git`, `mercurial`, `perforce`, `subversion` or `none`
-
-role :web, "your web-server here"                          # Your HTTP server, Apache/etc
-role :app, "your app-server here"                          # This may be the same as your `Web` server
-role :db,  "your primary db-server here", :primary => true # This is where Rails migrations will run
-role :db,  "your slave db-server here"
-
-# if you're still using the script/reaper helper you will need
-# these http://github.com/rails/irs_process_scripts
-
-# If you are using Passenger mod_rails uncomment this:
-# namespace :deploy do
-#   task :start do ; end
-#   task :stop do ; end
-#   task :restart, :roles => :app, :except => { :no_release => true } do
-#     run "#{try_sudo} touch #{File.join(current_path,'tmp','restart.txt')}"
-#   end
-# end
+require 'bundler/capistrano'
+set :application, "massiveapp"
+set :scm, :git
+set :repository, "git://github.com/deployingrails/massiveapp.git"
+server "localhost", :web, :app, :db, :primary => true
+ssh_options[:port] = 2222
+ssh_options[:keys] = "~/.vagrant.d/insecure_private_key"
+set :user, "vagrant"
+set :group, "vagrant"
+set :deploy_to, "/var/massiveapp"
+set :use_sudo, false
+set :deploy_via, :copy
+set :copy_strategy, :export
+namespace :deploy do
+  task :start do ; end
+  task :stop do ; end
+  desc "Restart the application"
+  task :restart, :roles => :app, :except => { :no_release => true } do
+    run "#{try_sudo} touch #{File.join(current_path,'tmp','restart.txt')}"
+  end
+  desc "Copy the database.yml file into the latest release"
+  task :copy_in_database_yml do
+    run "cp #{shared_path}/config/database.yml #{latest_release}/config/"
+  end
+end
+before "deploy:assets:precompile", "deploy:copy_in_database_yml"
