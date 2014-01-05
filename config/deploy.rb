@@ -1,7 +1,10 @@
 require 'bundler/capistrano'
+require "whenever/capistrano"
+
 set :application, "massiveapp"
+set :whenever_command, "bundle exec whenever"
 set :scm, :git
-set :repository, "git://github.com/deployingrails/massiveapp.git"
+set :repository, "git://github.com/berkos/massiveapp.git"
 server "localhost", :web, :app, :db, :primary => true
 ssh_options[:port] = 2222
 ssh_options[:keys] = "~/.vagrant.d/insecure_private_key"
@@ -11,21 +14,6 @@ set :deploy_to, "/var/massiveapp"
 set :use_sudo, false
 set :deploy_via, :copy
 set :copy_strategy, :export
-
-set :cleanup_targets, %w(log public/system tmp)
-set :release_directories, %w(log tmp)
-set :release_symlinks do
-  {
-    "config/settings/#{stage}.yml" => 'config/settings.yml',
-    "config/database/#{stage}.yml" => 'config/memcached.yml',
-  }
-end
-set :shared_symlinks, {
-  'log'     => 'log',
-  'pids'    => 'tmp/pids',
-  'sockets' => 'tmp/sockets',
-  'system'  => 'public/system'
-}
 
 namespace :deploy do
   task :start do ; end
@@ -41,3 +29,13 @@ namespace :deploy do
 end
 before "deploy:assets:precompile", "deploy:copy_in_database_yml"
 before :deploy, "deploy:confirm"
+
+desc "Download the production log file"
+task :get_dir do |t|
+  get "#{current_path}/log/", "#{Time.now}.log"
+end
+desc "Download the production log file"
+task :get_log do |t|
+  get "#{current_path}/log/production.log", "#{Time.now.strftime("%Y%m%d%H%M")}.production.log"
+end
+

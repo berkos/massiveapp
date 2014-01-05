@@ -17,3 +17,5 @@ end
 group :development do
 	gem 'capistrano', '~> 2.11.2'
 end
+
+gem 'whenever', :require => false

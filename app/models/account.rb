@@ -5,4 +5,8 @@ class Account < ActiveRecord::Base
   has_many :outgoing_bookmarks, :class_name => 'Bookmark', :through => :outgoing_shares
   has_many :incoming_shares, :class_name => 'Share', :foreign_key => 'shared_with_id'
   has_many :incoming_bookmarks, :class_name => 'Bookmark', :through => :incoming_shares
+
+  def self.send_daily_activity_report
+    # Collect activity for yesterday and send an email
+  end
 end
